@@ -112,13 +112,14 @@ class QuizSession:
             await self.channel.send(embed=embed)
 
         # ── Collecte des réponses texte ───────────────────────────────────
-        answered: dict[int, tuple[discord.User, bool]] = {}
+        correct_ids:   set[int]           = set()
+        correct_users: list[discord.User] = []
 
         def check(m: discord.Message) -> bool:
             return (
                 m.channel.id == self.channel.id
                 and not m.author.bot
-                and m.author.id not in answered
+                and m.author.id not in correct_ids  # peut retenter tant qu'on n'a pas trouvé
             )
 
         end_time = asyncio.get_event_loop().time() + QUESTION_TIMEOUT
@@ -130,31 +131,31 @@ class QuizSession:
             try:
                 reply = await asyncio.wait_for(
                     self.bot.wait_for("message", check=check),
-                    timeout=min(remaining, 1.0),  # vérifie is_active chaque seconde
+                    timeout=min(remaining, 1.0),
                 )
                 is_correct = _normalize(reply.content) == _normalize(question["answer"])
-                answered[reply.author.id] = (reply.author, is_correct)
-                asyncio.create_task(reply.add_reaction("✅" if is_correct else "❌"))
+
                 if is_correct:
-                    break
+                    correct_ids.add(reply.author.id)
+                    correct_users.append(reply.author)
+                    asyncio.create_task(reply.add_reaction("✅"))
+                    break  # bonne réponse → question suivante immédiatement
 
             except asyncio.TimeoutError:
                 if asyncio.get_event_loop().time() >= end_time:
-                    break  # temps écoulé
-                # sinon on re-boucle pour vérifier is_active
+                    break
 
         if not self.is_active:
             return
 
         # ── Mise à jour des scores ────────────────────────────────────────
-        for uid, (user, correct) in answered.items():
+        for user in correct_users:
+            uid = user.id
             if uid not in self.scores:
                 self.scores[uid]    = 0
                 self.usernames[uid] = user.display_name
-            if correct:
-                self.scores[uid] += 1
+            self.scores[uid] += 1
 
-        correct_users = [u for u, ok in answered.values() if ok]
         await self.channel.send(embed=self._build_result_embed(idx, question, correct_users))
 
     # ── Builders d'embeds ────────────────────────────────────────────────────
