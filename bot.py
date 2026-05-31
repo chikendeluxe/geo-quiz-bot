@@ -21,42 +21,43 @@ TOKEN = os.getenv("DISCORD_TOKEN", "")
 
 intents = discord.Intents.default()
 intents.message_content = True
-bot     = commands.Bot(command_prefix="!", intents=intents)
+bot = commands.Bot(command_prefix="!", intents=intents)
 quiz_mgr: QuizManager  # instancié dans on_ready
 
 
 # ── Labels UI ─────────────────────────────────────────────────────────────────
 
 _TYPE_LABELS = {
-    "all":              "🌐 Tous les types",
-    "flags":            "🚩 Drapeaux",
-    "capitals":         "🏛️ Capitales",
-    "maps":             "🗺️ Cartes",
-    "flags,capitals":   "🚩🏛️ Drapeaux + Capitales",
-    "flags,maps":       "🚩🗺️ Drapeaux + Cartes",
-    "capitals,maps":    "🏛️🗺️ Capitales + Cartes",
+    "all": "🌐 Tous les types",
+    "flags": "🚩 Drapeaux",
+    "capitals": "🏛️ Capitales",
+    "maps": "🗺️ Cartes",
+    "flags,capitals": "🚩🏛️ Drapeaux + Capitales",
+    "flags,maps": "🚩🗺️ Drapeaux + Cartes",
+    "capitals,maps": "🏛️🗺️ Capitales + Cartes",
 }
 
 _DIFF_LABELS = {
-    "easy":   "🟢 Facile",
+    "easy": "🟢 Facile",
     "medium": "🟡 Moyen",
-    "hard":   "🔴 Difficile",
-    "all":    "🌈 Tous les niveaux",
+    "hard": "🔴 Difficile",
+    "all": "🌈 Tous les niveaux",
 }
 
 # Type → liste de clés internes
 _TYPE_MAP = {
-    "all":            ["flag", "capital", "map"],
-    "flags":          ["flag"],
-    "capitals":       ["capital"],
-    "maps":           ["map"],
+    "all": ["flag", "capital", "map"],
+    "flags": ["flag"],
+    "capitals": ["capital"],
+    "maps": ["map"],
     "flags,capitals": ["flag", "capital"],
-    "flags,maps":     ["flag", "map"],
-    "capitals,maps":  ["capital", "map"],
+    "flags,maps": ["flag", "map"],
+    "capitals,maps": ["capital", "map"],
 }
 
 
 # ── Événements ────────────────────────────────────────────────────────────────
+
 
 @bot.event
 async def on_ready():
@@ -77,32 +78,39 @@ async def on_ready():
 
 # ── Commandes ─────────────────────────────────────────────────────────────────
 
+
 @bot.tree.command(name="quiz", description="🌍 Lance un quiz de géographie !")
 @app_commands.describe(
     type="Type de questions à poser",
     difficulty="Niveau de difficulté",
     questions="Nombre de questions (5 à 20)",
 )
-@app_commands.choices(type=[
-    app_commands.Choice(name="🌐 Tous les types",            value="all"),
-    app_commands.Choice(name="🚩 Drapeaux seulement",        value="flags"),
-    app_commands.Choice(name="🏛️ Capitales seulement",      value="capitals"),
-    app_commands.Choice(name="🗺️ Cartes seulement",         value="maps"),
-    app_commands.Choice(name="🚩🏛️ Drapeaux + Capitales",   value="flags,capitals"),
-    app_commands.Choice(name="🚩🗺️ Drapeaux + Cartes",      value="flags,maps"),
-    app_commands.Choice(name="🏛️🗺️ Capitales + Cartes",    value="capitals,maps"),
-])
-@app_commands.choices(difficulty=[
-    app_commands.Choice(name="🟢 Facile  (pays très connus)",      value="easy"),
-    app_commands.Choice(name="🟡 Moyen   (pays moyennement connus)", value="medium"),
-    app_commands.Choice(name="🔴 Difficile (pays moins connus)",     value="hard"),
-    app_commands.Choice(name="🌈 Tous les niveaux mélangés",         value="all"),
-])
+@app_commands.choices(
+    type=[
+        app_commands.Choice(name="🌐 Tous les types", value="all"),
+        app_commands.Choice(name="🚩 Drapeaux seulement", value="flags"),
+        app_commands.Choice(name="🏛️ Capitales seulement", value="capitals"),
+        app_commands.Choice(name="🗺️ Cartes seulement", value="maps"),
+        app_commands.Choice(name="🚩🏛️ Drapeaux + Capitales", value="flags,capitals"),
+        app_commands.Choice(name="🚩🗺️ Drapeaux + Cartes", value="flags,maps"),
+        app_commands.Choice(name="🏛️🗺️ Capitales + Cartes", value="capitals,maps"),
+    ]
+)
+@app_commands.choices(
+    difficulty=[
+        app_commands.Choice(name="🟢 Facile  (pays très connus)", value="easy"),
+        app_commands.Choice(
+            name="🟡 Moyen   (pays moyennement connus)", value="medium"
+        ),
+        app_commands.Choice(name="🔴 Difficile (pays moins connus)", value="hard"),
+        app_commands.Choice(name="🌈 Tous les niveaux mélangés", value="all"),
+    ]
+)
 async def quiz_command(
     interaction: discord.Interaction,
     type: str = "all",
     difficulty: str = "easy",
-    questions: app_commands.Range[int, 5, 20] = 10,
+    questions: app_commands.Range[int, 5, 600] = 10,
 ):
     channel_id = interaction.channel_id
 
@@ -114,7 +122,7 @@ async def quiz_command(
         )
         return
 
-    q_types  = _TYPE_MAP.get(type, ["flag", "capital", "map"])
+    q_types = _TYPE_MAP.get(type, ["flag", "capital", "map"])
     type_lbl = _TYPE_LABELS.get(type, type)
     diff_lbl = _DIFF_LABELS.get(difficulty, difficulty)
 
@@ -135,7 +143,9 @@ async def quiz_command(
     await quiz_mgr.start_quiz(interaction.channel, q_types, difficulty, questions)
 
 
-@bot.tree.command(name="stopquiz", description="⏹️ Arrête le quiz en cours dans ce salon")
+@bot.tree.command(
+    name="stopquiz", description="⏹️ Arrête le quiz en cours dans ce salon"
+)
 async def stopquiz_command(interaction: discord.Interaction):
     channel_id = interaction.channel_id
 
@@ -185,8 +195,8 @@ async def aide_command(interaction: discord.Interaction):
         ),
         inline=False,
     )
-    embed.add_field(name="/stopquiz", value="Arrête le quiz en cours.",    inline=False)
-    embed.add_field(name="/scores",   value="Consulte les scores actuels.", inline=False)
+    embed.add_field(name="/stopquiz", value="Arrête le quiz en cours.", inline=False)
+    embed.add_field(name="/scores", value="Consulte les scores actuels.", inline=False)
     embed.add_field(
         name="Comment jouer ?",
         value=(
