@@ -1,81 +1,24 @@
 """
-Logique d'une session de quiz :
-  • QuizSession   – gère le déroulement complet (questions, scores, arrêt)
-  • QuizAnswerView / AnswerButton – UI Discord (boutons A/B/C/D)
+Logique d'une session de quiz.
+Les joueurs tapent leur réponse dans le chat.
+Le drapeau s'affiche en vrai image (flagcdn.com).
 """
 
 import asyncio
+import unicodedata
 import discord
 from questions import generate_questions
 from map_generator import generate_country_map
 
-QUESTION_TIMEOUT   = 15   # secondes par question
+QUESTION_TIMEOUT   = 10   # secondes par question
 INTER_QUESTION_GAP = 3    # secondes entre deux questions
 
-# Palette de couleurs des boutons (cyclée sur les 4 choix)
-_BTN_STYLES = [
-    discord.ButtonStyle.primary,
-    discord.ButtonStyle.success,
-    discord.ButtonStyle.danger,
-    discord.ButtonStyle.secondary,
-]
 
-# ── UI ────────────────────────────────────────────────────────────────────────
+def _normalize(text: str) -> str:
+    """Minuscules + suppression des accents pour comparaison flexible."""
+    nfkd = unicodedata.normalize("NFKD", text.lower().strip())
+    return "".join(c for c in nfkd if not unicodedata.combining(c))
 
-class AnswerButton(discord.ui.Button):
-    def __init__(self, label: str, choice: str, index: int):
-        super().__init__(label=label[:80], style=_BTN_STYLES[index % 4])
-        self.choice = choice
-
-    async def callback(self, interaction: discord.Interaction):
-        view: QuizAnswerView = self.view  # type: ignore
-
-        if view.is_ended:
-            await interaction.response.send_message("⏰ Temps écoulé !", ephemeral=True)
-            return
-
-        uid = interaction.user.id
-        if uid in view.results:
-            await interaction.response.send_message(
-                "Tu as déjà répondu à cette question !", ephemeral=True
-            )
-            return
-
-        is_correct = self.choice == view.correct_answer
-        view.results[uid] = (interaction.user, is_correct)
-
-        if is_correct:
-            view.correct_users.append(interaction.user)
-            await interaction.response.send_message(
-                "✅ **Bonne réponse !** +1 point 🎉", ephemeral=True
-            )
-        else:
-            await interaction.response.send_message(
-                f"❌ Mauvaise réponse ! Tu as répondu : **{self.choice}**", ephemeral=True
-            )
-
-
-class QuizAnswerView(discord.ui.View):
-    def __init__(self, correct_answer: str, choices: list[str]):
-        super().__init__(timeout=float(QUESTION_TIMEOUT))
-        self.correct_answer = correct_answer
-        self.results:       dict[int, tuple[discord.User, bool]] = {}
-        self.correct_users: list[discord.User] = []
-        self.is_ended = False
-
-        for i, choice in enumerate(choices):
-            self.add_item(AnswerButton(f"{chr(65+i)}. {choice}", choice, i))
-
-    async def on_timeout(self):
-        self.is_ended = True
-        self.stop()
-
-    def disable_all(self):
-        for item in self.children:
-            item.disabled = True  # type: ignore
-
-
-# ── Session ───────────────────────────────────────────────────────────────────
 
 def _progress_bar(current: int, total: int, width: int = 12) -> str:
     filled = round(width * current / max(total, 1))
@@ -83,27 +26,22 @@ def _progress_bar(current: int, total: int, width: int = 12) -> str:
 
 
 class QuizSession:
-    def __init__(
-        self,
-        channel: discord.TextChannel,
-        question_types: list[str],
-        difficulty: str,
-        num_questions: int,
-    ):
+    def __init__(self, channel, bot, question_types, difficulty, num_questions):
         self.channel        = channel
+        self.bot            = bot
         self.question_types = question_types
         self.difficulty     = difficulty
         self.num_questions  = num_questions
 
-        self.scores:    dict[int, int]  = {}   # uid → points
-        self.usernames: dict[int, str]  = {}   # uid → display_name
-        self.questions: list[dict]      = []
+        self.scores:     dict[int, int] = {}
+        self.usernames:  dict[int, str] = {}
+        self.questions:  list[dict]     = []
         self.current_idx                = 0
         self.is_active                  = True
         self.task: asyncio.Task | None  = None
         self._stop_event                = asyncio.Event()
 
-    # ── Public ────────────────────────────────────────────────────────────────
+    # ── Public ───────────────────────────────────────────────────────────────
 
     async def start(self):
         self.questions = generate_questions(
@@ -147,91 +85,108 @@ class QuizSession:
         )
         return embed
 
-    # ── Privé ─────────────────────────────────────────────────────────────────
+    # ── Privé ────────────────────────────────────────────────────────────────
 
     async def _ask_question(self, idx: int, question: dict):
-        view  = QuizAnswerView(question["answer"], question["choices"])
         embed = self._build_question_embed(idx, question)
         file: discord.File | None = None
 
-        # Génération de la carte pour les questions de type map
-        if question["type"] == "map":
+        # Image du drapeau via flagcdn.com
+        if question["type"] == "flag":
+            embed.set_image(
+                url=f"https://flagcdn.com/w640/{question['iso2'].lower()}.png"
+            )
+
+        # Carte générée dynamiquement
+        elif question["type"] == "map":
             try:
                 map_io = await generate_country_map(question["country_en"])
                 file   = discord.File(map_io, filename="carte.png")
                 embed.set_image(url="attachment://carte.png")
             except Exception as exc:
                 print(f"[map_generator] Erreur : {exc}")
-                embed.add_field(
-                    name="⚠️ Carte indisponible",
-                    value="Fichiers cartographiques manquants.",
-                    inline=False,
-                )
 
-        # Envoi du message
         if file:
-            msg = await self.channel.send(embed=embed, file=file, view=view)
+            await self.channel.send(embed=embed, file=file)
         else:
-            msg = await self.channel.send(embed=embed, view=view)
+            await self.channel.send(embed=embed)
 
-        # Attente : fin du timeout OU arrêt du quiz
-        wait_view = asyncio.ensure_future(view.wait())
-        wait_stop = asyncio.ensure_future(self._stop_event.wait())
-        done, pending = await asyncio.wait(
-            {wait_view, wait_stop},
-            return_when=asyncio.FIRST_COMPLETED,
-        )
-        for t in pending:
-            t.cancel()
+        # ── Collecte des réponses texte ───────────────────────────────────
+        answered: dict[int, tuple[discord.User, bool]] = {}
+
+        def check(m: discord.Message) -> bool:
+            return (
+                m.channel.id == self.channel.id
+                and not m.author.bot
+                and m.author.id not in answered
+            )
+
+        end_time = asyncio.get_event_loop().time() + QUESTION_TIMEOUT
+
+        while self.is_active:
+            remaining = end_time - asyncio.get_event_loop().time()
+            if remaining <= 0:
+                break
+            try:
+                reply = await asyncio.wait_for(
+                    self.bot.wait_for("message", check=check),
+                    timeout=min(remaining, 1.0),  # vérifie is_active chaque seconde
+                )
+                is_correct = _normalize(reply.content) == _normalize(question["answer"])
+                answered[reply.author.id] = (reply.author, is_correct)
+                await reply.add_reaction("✅" if is_correct else "❌")
+
+            except asyncio.TimeoutError:
+                if asyncio.get_event_loop().time() >= end_time:
+                    break  # temps écoulé
+                # sinon on re-boucle pour vérifier is_active
 
         if not self.is_active:
             return
 
-        # Enregistrement des scores
-        for uid, (user, correct) in view.results.items():
+        # ── Mise à jour des scores ────────────────────────────────────────
+        for uid, (user, correct) in answered.items():
             if uid not in self.scores:
                 self.scores[uid]    = 0
                 self.usernames[uid] = user.display_name
             if correct:
                 self.scores[uid] += 1
 
-        # Mise à jour du message avec le résultat
-        view.disable_all()
-        result_embed = self._build_result_embed(idx, question, view)
-        try:
-            await msg.edit(embed=result_embed, view=view)
-        except discord.HTTPException:
-            pass
+        correct_users = [u for u, ok in answered.values() if ok]
+        await self.channel.send(embed=self._build_result_embed(idx, question, correct_users))
+
+    # ── Builders d'embeds ────────────────────────────────────────────────────
 
     def _build_question_embed(self, idx: int, question: dict) -> discord.Embed:
-        q_type = question["type"]
-        total  = self.num_questions
-        bar    = _progress_bar(idx + 1, total)
+        total = self.num_questions
+        bar   = _progress_bar(idx + 1, total)
 
-        if q_type == "flag":
-            color = 0x3498DB
-            desc  = f"# {question['flag_emoji']}\n\nQuel pays est représenté par ce drapeau ?"
-        elif q_type == "capital":
-            color = 0x9B59B6
-            desc  = question["text"]
-        else:  # map
-            color = 0xE67E22
-            desc  = question["text"]
+        type_to_color = {"flag": 0x3498DB, "capital": 0x9B59B6, "map": 0xE67E22}
+        color = type_to_color.get(question["type"], 0x3498DB)
+
+        if question["type"] == "flag":
+            desc = "🚩 **De quel pays est ce drapeau ?**"
+        elif question["type"] == "capital":
+            desc = question["text"]
+        else:
+            desc = question["text"]
+
+        desc += "\n\n*✏️ Écrivez votre réponse dans le chat !*"
 
         embed = discord.Embed(
             title=f"Question {idx + 1} / {total}  [{bar}]",
             description=desc,
             color=color,
         )
-        embed.set_footer(text=f"⏱️  {QUESTION_TIMEOUT} secondes · Cliquez sur votre réponse !")
+        embed.set_footer(text=f"⏱️  {QUESTION_TIMEOUT} secondes pour répondre !")
         return embed
 
     def _build_result_embed(
-        self, idx: int, question: dict, view: QuizAnswerView
+        self, idx: int, question: dict, correct_users: list
     ) -> discord.Embed:
         embed = discord.Embed(
             title=f"📊 Résultat – Question {idx + 1}",
-            color=0x2ECC71 if view.correct_users else 0xE74C3C,
+            color=0x2ECC71 if correct_users else 0xE74C3C,
         )
         embed.add_field(
             name="✅ Bonne réponse",
@@ -239,8 +194,8 @@ class QuizSession:
             inline=False,
         )
 
-        if view.correct_users:
-            names = ", ".join(f"**{u.display_name}**" for u in view.correct_users)
+        if correct_users:
+            names = ", ".join(f"**{u.display_name}**" for u in correct_users)
             embed.add_field(name="🎉 Bravo !", value=names, inline=False)
         else:
             embed.add_field(
@@ -249,7 +204,6 @@ class QuizSession:
                 inline=False,
             )
 
-        # Scores si plusieurs joueurs
         if len(self.scores) > 1:
             lines = [
                 f"**{self.usernames.get(uid, '?')}** : {pts} pt{'s' if pts != 1 else ''}"
@@ -272,13 +226,11 @@ class QuizSession:
 
         sorted_scores = sorted(self.scores.items(), key=lambda x: -x[1])
         medals = ["🥇", "🥈", "🥉"]
-        lines  = []
-        for i, (uid, pts) in enumerate(sorted_scores):
-            medal = medals[i] if i < 3 else f"#{i + 1}"
-            name  = self.usernames.get(uid, "Inconnu")
-            lines.append(
-                f"{medal} **{name}** : {pts} / {self.num_questions} pt{'s' if pts != 1 else ''}"
-            )
+        lines  = [
+            f"{medals[i] if i < 3 else f'#{i+1}'} **{self.usernames.get(uid, 'Inconnu')}** : "
+            f"{pts} / {self.num_questions} pt{'s' if pts != 1 else ''}"
+            for i, (uid, pts) in enumerate(sorted_scores)
+        ]
 
         embed = discord.Embed(
             title="🏁 Quiz Terminé ! Résultats finaux",

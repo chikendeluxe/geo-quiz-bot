@@ -1,0 +1,5 @@
+echo ".env
+.venv/
+__pycache__/
+_map_cache/
+bot.zip" | Out-File -Encoding utf8 .gitignore

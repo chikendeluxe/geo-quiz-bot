@@ -10,17 +10,13 @@ from quiz_session import QuizSession
 class QuizManager:
     def __init__(self, bot: discord.Client):
         self.bot      = bot
-        self._sessions: dict[int, QuizSession] = {}   # channel_id → session
-
-    # ── Accesseurs ────────────────────────────────────────────────────────────
+        self._sessions: dict[int, QuizSession] = {}
 
     def is_active(self, channel_id: int) -> bool:
         return channel_id in self._sessions
 
     def get_session(self, channel_id: int) -> QuizSession | None:
         return self._sessions.get(channel_id)
-
-    # ── Actions ───────────────────────────────────────────────────────────────
 
     async def start_quiz(
         self,
@@ -29,21 +25,18 @@ class QuizManager:
         difficulty: str,
         num_questions: int,
     ) -> None:
-        """Crée et démarre une nouvelle session dans le salon."""
-        session = QuizSession(channel, question_types, difficulty, num_questions)
+        session = QuizSession(channel, self.bot, question_types, difficulty, num_questions)
         self._sessions[channel.id] = session
 
         task = asyncio.create_task(session.start())
         session.task = task
 
-        # Nettoyage automatique à la fin
         def _cleanup(t: asyncio.Task):
             self._sessions.pop(channel.id, None)
 
         task.add_done_callback(_cleanup)
 
     async def stop_quiz(self, channel_id: int) -> None:
-        """Arrête la session en cours dans le salon."""
         session = self._sessions.pop(channel_id, None)
         if session:
             session.stop()

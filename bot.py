@@ -20,6 +20,7 @@ TOKEN = os.getenv("DISCORD_TOKEN", "")
 # ── Bot setup ─────────────────────────────────────────────────────────────────
 
 intents = discord.Intents.default()
+intents.message_content = True
 bot     = commands.Bot(command_prefix="!", intents=intents)
 quiz_mgr: QuizManager  # instancié dans on_ready
 
