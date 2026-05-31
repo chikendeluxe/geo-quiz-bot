@@ -1,0 +1,15 @@
+# Bot Discord
+discord.py>=2.3.0
+
+# Variables d'environnement
+python-dotenv>=1.0.0
+
+# Génération des cartes
+geopandas>=0.14.0
+matplotlib>=3.7.0
+geodatasets>=2023.3.0    # requis pour geopandas >= 1.0
+
+# Dépendances transitives utiles
+numpy>=1.24.0
+Shapely>=2.0.0
+Pillow>=10.0.0
