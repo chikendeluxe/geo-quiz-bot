@@ -1,14 +1,12 @@
 """
-Base de données des pays : noms FR/EN, capitales, drapeau emoji, difficulté, continent.
+Base de données complète des pays du monde (~190 pays).
 """
 
 
 def get_flag(iso2: str) -> str:
-    """Génère l'emoji drapeau depuis le code ISO 3166-1 alpha-2."""
     return "".join(chr(0x1F1E6 + ord(c) - ord("A")) for c in iso2.upper())
 
 
-# Chaque pays :  fr, en (nom geopandas), capital_fr, iso2, difficulty, continent
 COUNTRIES = [
     # ══════════════════════════  FACILE  ══════════════════════════
     {"fr": "France",             "en": "France",                   "capital_fr": "Paris",           "iso2": "FR", "difficulty": "easy",   "continent": "Europe"},
@@ -53,11 +51,13 @@ COUNTRIES = [
     {"fr": "Bulgarie",           "en": "Bulgaria",                 "capital_fr": "Sofia",           "iso2": "BG", "difficulty": "medium", "continent": "Europe"},
     {"fr": "Croatie",            "en": "Croatia",                  "capital_fr": "Zagreb",          "iso2": "HR", "difficulty": "medium", "continent": "Europe"},
     {"fr": "Serbie",             "en": "Serbia",                   "capital_fr": "Belgrade",        "iso2": "RS", "difficulty": "medium", "continent": "Europe"},
+    {"fr": "Luxembourg",         "en": "Luxembourg",               "capital_fr": "Luxembourg",      "iso2": "LU", "difficulty": "medium", "continent": "Europe"},
     {"fr": "Colombie",           "en": "Colombia",                 "capital_fr": "Bogota",          "iso2": "CO", "difficulty": "medium", "continent": "Amérique du Sud"},
     {"fr": "Pérou",              "en": "Peru",                     "capital_fr": "Lima",            "iso2": "PE", "difficulty": "medium", "continent": "Amérique du Sud"},
     {"fr": "Venezuela",          "en": "Venezuela",                "capital_fr": "Caracas",         "iso2": "VE", "difficulty": "medium", "continent": "Amérique du Sud"},
     {"fr": "Chili",              "en": "Chile",                    "capital_fr": "Santiago",        "iso2": "CL", "difficulty": "medium", "continent": "Amérique du Sud"},
     {"fr": "Cuba",               "en": "Cuba",                     "capital_fr": "La Havane",       "iso2": "CU", "difficulty": "medium", "continent": "Amérique du Nord"},
+    {"fr": "Costa Rica",         "en": "Costa Rica",               "capital_fr": "San José",        "iso2": "CR", "difficulty": "medium", "continent": "Amérique du Nord"},
     {"fr": "Thaïlande",          "en": "Thailand",                 "capital_fr": "Bangkok",         "iso2": "TH", "difficulty": "medium", "continent": "Asie"},
     {"fr": "Vietnam",            "en": "Vietnam",                  "capital_fr": "Hanoï",           "iso2": "VN", "difficulty": "medium", "continent": "Asie"},
     {"fr": "Philippines",        "en": "Philippines",              "capital_fr": "Manille",         "iso2": "PH", "difficulty": "medium", "continent": "Asie"},
@@ -65,6 +65,10 @@ COUNTRIES = [
     {"fr": "Pakistan",           "en": "Pakistan",                 "capital_fr": "Islamabad",       "iso2": "PK", "difficulty": "medium", "continent": "Asie"},
     {"fr": "Iran",               "en": "Iran",                     "capital_fr": "Téhéran",         "iso2": "IR", "difficulty": "medium", "continent": "Asie"},
     {"fr": "Irak",               "en": "Iraq",                     "capital_fr": "Bagdad",          "iso2": "IQ", "difficulty": "medium", "continent": "Asie"},
+    {"fr": "Émirats arabes unis","en": "United Arab Emirates",     "capital_fr": "Abou Dabi",       "iso2": "AE", "difficulty": "medium", "continent": "Asie"},
+    {"fr": "Singapour",          "en": "Singapore",                "capital_fr": "Singapour",       "iso2": "SG", "difficulty": "medium", "continent": "Asie"},
+    {"fr": "Afghanistan",        "en": "Afghanistan",              "capital_fr": "Kaboul",          "iso2": "AF", "difficulty": "medium", "continent": "Asie"},
+    {"fr": "Liban",              "en": "Lebanon",                  "capital_fr": "Beyrouth",        "iso2": "LB", "difficulty": "medium", "continent": "Asie"},
     {"fr": "Kazakhstan",         "en": "Kazakhstan",               "capital_fr": "Astana",          "iso2": "KZ", "difficulty": "medium", "continent": "Asie"},
     {"fr": "Myanmar",            "en": "Myanmar",                  "capital_fr": "Naypyidaw",       "iso2": "MM", "difficulty": "medium", "continent": "Asie"},
     {"fr": "Algérie",            "en": "Algeria",                  "capital_fr": "Alger",           "iso2": "DZ", "difficulty": "medium", "continent": "Afrique"},
@@ -75,6 +79,7 @@ COUNTRIES = [
     {"fr": "Nouvelle-Zélande",   "en": "New Zealand",              "capital_fr": "Wellington",      "iso2": "NZ", "difficulty": "medium", "continent": "Océanie"},
 
     # ══════════════════════════  DIFFICILE  ══════════════════════════
+    # Europe
     {"fr": "Islande",            "en": "Iceland",                  "capital_fr": "Reykjavik",       "iso2": "IS", "difficulty": "hard",   "continent": "Europe"},
     {"fr": "Slovaquie",          "en": "Slovakia",                 "capital_fr": "Bratislava",      "iso2": "SK", "difficulty": "hard",   "continent": "Europe"},
     {"fr": "Slovénie",           "en": "Slovenia",                 "capital_fr": "Ljubljana",       "iso2": "SI", "difficulty": "hard",   "continent": "Europe"},
@@ -87,6 +92,13 @@ COUNTRIES = [
     {"fr": "Macédoine du Nord",  "en": "Macedonia",                "capital_fr": "Skopje",          "iso2": "MK", "difficulty": "hard",   "continent": "Europe"},
     {"fr": "Bosnie-Herzégovine", "en": "Bosnia and Herz.",         "capital_fr": "Sarajevo",        "iso2": "BA", "difficulty": "hard",   "continent": "Europe"},
     {"fr": "Monténégro",         "en": "Montenegro",               "capital_fr": "Podgorica",       "iso2": "ME", "difficulty": "hard",   "continent": "Europe"},
+    {"fr": "Kosovo",             "en": "Kosovo",                   "capital_fr": "Pristina",        "iso2": "XK", "difficulty": "hard",   "continent": "Europe"},
+    {"fr": "Malte",              "en": "Malta",                    "capital_fr": "La Valette",      "iso2": "MT", "difficulty": "hard",   "continent": "Europe"},
+    {"fr": "Chypre",             "en": "Cyprus",                   "capital_fr": "Nicosie",         "iso2": "CY", "difficulty": "hard",   "continent": "Europe"},
+    {"fr": "Andorre",            "en": "Andorra",                  "capital_fr": "Andorre-la-Vieille","iso2": "AD","difficulty": "hard",  "continent": "Europe"},
+    {"fr": "Liechtenstein",      "en": "Liechtenstein",            "capital_fr": "Vaduz",           "iso2": "LI", "difficulty": "hard",   "continent": "Europe"},
+    {"fr": "Monaco",             "en": "Monaco",                   "capital_fr": "Monaco",          "iso2": "MC", "difficulty": "hard",   "continent": "Europe"},
+    # Asie
     {"fr": "Géorgie",            "en": "Georgia",                  "capital_fr": "Tbilissi",        "iso2": "GE", "difficulty": "hard",   "continent": "Asie"},
     {"fr": "Arménie",            "en": "Armenia",                  "capital_fr": "Erevan",          "iso2": "AM", "difficulty": "hard",   "continent": "Asie"},
     {"fr": "Azerbaïdjan",        "en": "Azerbaijan",               "capital_fr": "Bakou",           "iso2": "AZ", "difficulty": "hard",   "continent": "Asie"},
@@ -99,6 +111,21 @@ COUNTRIES = [
     {"fr": "Oman",               "en": "Oman",                     "capital_fr": "Mascate",         "iso2": "OM", "difficulty": "hard",   "continent": "Asie"},
     {"fr": "Malaisie",           "en": "Malaysia",                 "capital_fr": "Kuala Lumpur",    "iso2": "MY", "difficulty": "hard",   "continent": "Asie"},
     {"fr": "Corée du Nord",      "en": "N. Korea",                 "capital_fr": "Pyongyang",       "iso2": "KP", "difficulty": "hard",   "continent": "Asie"},
+    {"fr": "Qatar",              "en": "Qatar",                    "capital_fr": "Doha",            "iso2": "QA", "difficulty": "hard",   "continent": "Asie"},
+    {"fr": "Koweït",             "en": "Kuwait",                   "capital_fr": "Koweït City",     "iso2": "KW", "difficulty": "hard",   "continent": "Asie"},
+    {"fr": "Bahreïn",            "en": "Bahrain",                  "capital_fr": "Manama",          "iso2": "BH", "difficulty": "hard",   "continent": "Asie"},
+    {"fr": "Yémen",              "en": "Yemen",                    "capital_fr": "Sanaa",           "iso2": "YE", "difficulty": "hard",   "continent": "Asie"},
+    {"fr": "Israël",             "en": "Israel",                   "capital_fr": "Jérusalem",       "iso2": "IL", "difficulty": "hard",   "continent": "Asie"},
+    {"fr": "Sri Lanka",          "en": "Sri Lanka",                "capital_fr": "Sri Jayawardenepura Kotte", "iso2": "LK", "difficulty": "hard", "continent": "Asie"},
+    {"fr": "Cambodge",           "en": "Cambodia",                 "capital_fr": "Phnom Penh",      "iso2": "KH", "difficulty": "hard",   "continent": "Asie"},
+    {"fr": "Laos",               "en": "Laos",                     "capital_fr": "Vientiane",       "iso2": "LA", "difficulty": "hard",   "continent": "Asie"},
+    {"fr": "Kirghizistan",       "en": "Kyrgyzstan",               "capital_fr": "Bichkek",         "iso2": "KG", "difficulty": "hard",   "continent": "Asie"},
+    {"fr": "Tadjikistan",        "en": "Tajikistan",               "capital_fr": "Douchanbé",       "iso2": "TJ", "difficulty": "hard",   "continent": "Asie"},
+    {"fr": "Turkménistan",       "en": "Turkmenistan",             "capital_fr": "Achgabat",        "iso2": "TM", "difficulty": "hard",   "continent": "Asie"},
+    {"fr": "Bhoutan",            "en": "Bhutan",                   "capital_fr": "Thimphou",        "iso2": "BT", "difficulty": "hard",   "continent": "Asie"},
+    {"fr": "Brunéi",             "en": "Brunei",                   "capital_fr": "Bandar Seri Begawan", "iso2": "BN", "difficulty": "hard", "continent": "Asie"},
+    {"fr": "Timor oriental",     "en": "Timor-Leste",              "capital_fr": "Dili",            "iso2": "TL", "difficulty": "hard",   "continent": "Asie"},
+    # Afrique
     {"fr": "Angola",             "en": "Angola",                   "capital_fr": "Luanda",          "iso2": "AO", "difficulty": "hard",   "continent": "Afrique"},
     {"fr": "Mozambique",         "en": "Mozambique",               "capital_fr": "Maputo",          "iso2": "MZ", "difficulty": "hard",   "continent": "Afrique"},
     {"fr": "Ghana",              "en": "Ghana",                    "capital_fr": "Accra",           "iso2": "GH", "difficulty": "hard",   "continent": "Afrique"},
@@ -109,10 +136,57 @@ COUNTRIES = [
     {"fr": "Soudan",             "en": "Sudan",                    "capital_fr": "Khartoum",        "iso2": "SD", "difficulty": "hard",   "continent": "Afrique"},
     {"fr": "Zimbabwe",           "en": "Zimbabwe",                 "capital_fr": "Harare",          "iso2": "ZW", "difficulty": "hard",   "continent": "Afrique"},
     {"fr": "Zambie",             "en": "Zambia",                   "capital_fr": "Lusaka",          "iso2": "ZM", "difficulty": "hard",   "continent": "Afrique"},
+    {"fr": "Côte d'Ivoire",      "en": "Ivory Coast",              "capital_fr": "Yamoussoukro",    "iso2": "CI", "difficulty": "hard",   "continent": "Afrique"},
+    {"fr": "Mali",               "en": "Mali",                     "capital_fr": "Bamako",          "iso2": "ML", "difficulty": "hard",   "continent": "Afrique"},
+    {"fr": "Niger",              "en": "Niger",                    "capital_fr": "Niamey",          "iso2": "NE", "difficulty": "hard",   "continent": "Afrique"},
+    {"fr": "Tchad",              "en": "Chad",                     "capital_fr": "N'Djamena",       "iso2": "TD", "difficulty": "hard",   "continent": "Afrique"},
+    {"fr": "Burkina Faso",       "en": "Burkina Faso",             "capital_fr": "Ouagadougou",     "iso2": "BF", "difficulty": "hard",   "continent": "Afrique"},
+    {"fr": "Guinée",             "en": "Guinea",                   "capital_fr": "Conakry",         "iso2": "GN", "difficulty": "hard",   "continent": "Afrique"},
+    {"fr": "Sierra Leone",       "en": "Sierra Leone",             "capital_fr": "Freetown",        "iso2": "SL", "difficulty": "hard",   "continent": "Afrique"},
+    {"fr": "Libéria",            "en": "Liberia",                  "capital_fr": "Monrovia",        "iso2": "LR", "difficulty": "hard",   "continent": "Afrique"},
+    {"fr": "Gambie",             "en": "Gambia",                   "capital_fr": "Banjul",          "iso2": "GM", "difficulty": "hard",   "continent": "Afrique"},
+    {"fr": "Guinée-Bissau",      "en": "Guinea-Bissau",            "capital_fr": "Bissau",          "iso2": "GW", "difficulty": "hard",   "continent": "Afrique"},
+    {"fr": "Mauritanie",         "en": "Mauritania",               "capital_fr": "Nouakchott",      "iso2": "MR", "difficulty": "hard",   "continent": "Afrique"},
+    {"fr": "Somalie",            "en": "Somalia",                  "capital_fr": "Mogadiscio",      "iso2": "SO", "difficulty": "hard",   "continent": "Afrique"},
+    {"fr": "Érythrée",           "en": "Eritrea",                  "capital_fr": "Asmara",          "iso2": "ER", "difficulty": "hard",   "continent": "Afrique"},
+    {"fr": "Djibouti",           "en": "Djibouti",                 "capital_fr": "Djibouti",        "iso2": "DJ", "difficulty": "hard",   "continent": "Afrique"},
+    {"fr": "Rwanda",             "en": "Rwanda",                   "capital_fr": "Kigali",          "iso2": "RW", "difficulty": "hard",   "continent": "Afrique"},
+    {"fr": "Burundi",            "en": "Burundi",                  "capital_fr": "Gitega",          "iso2": "BI", "difficulty": "hard",   "continent": "Afrique"},
+    {"fr": "Ouganda",            "en": "Uganda",                   "capital_fr": "Kampala",         "iso2": "UG", "difficulty": "hard",   "continent": "Afrique"},
+    {"fr": "Malawi",             "en": "Malawi",                   "capital_fr": "Lilongwe",        "iso2": "MW", "difficulty": "hard",   "continent": "Afrique"},
+    {"fr": "Namibie",            "en": "Namibia",                  "capital_fr": "Windhoek",        "iso2": "NA", "difficulty": "hard",   "continent": "Afrique"},
+    {"fr": "Botswana",           "en": "Botswana",                 "capital_fr": "Gaborone",        "iso2": "BW", "difficulty": "hard",   "continent": "Afrique"},
+    {"fr": "Lesotho",            "en": "Lesotho",                  "capital_fr": "Maseru",          "iso2": "LS", "difficulty": "hard",   "continent": "Afrique"},
+    {"fr": "Eswatini",           "en": "eSwatini",                 "capital_fr": "Mbabane",         "iso2": "SZ", "difficulty": "hard",   "continent": "Afrique"},
+    {"fr": "Madagascar",         "en": "Madagascar",               "capital_fr": "Antananarivo",    "iso2": "MG", "difficulty": "hard",   "continent": "Afrique"},
+    {"fr": "Rép. centrafricaine","en": "Central African Rep.",     "capital_fr": "Bangui",          "iso2": "CF", "difficulty": "hard",   "continent": "Afrique"},
+    {"fr": "Gabon",              "en": "Gabon",                    "capital_fr": "Libreville",      "iso2": "GA", "difficulty": "hard",   "continent": "Afrique"},
+    {"fr": "Guinée équatoriale", "en": "Eq. Guinea",               "capital_fr": "Malabo",          "iso2": "GQ", "difficulty": "hard",   "continent": "Afrique"},
+    {"fr": "Congo",              "en": "Congo",                    "capital_fr": "Brazzaville",     "iso2": "CG", "difficulty": "hard",   "continent": "Afrique"},
+    {"fr": "RD Congo",           "en": "Dem. Rep. Congo",          "capital_fr": "Kinshasa",        "iso2": "CD", "difficulty": "hard",   "continent": "Afrique"},
+    {"fr": "Soudan du Sud",      "en": "S. Sudan",                 "capital_fr": "Djouba",          "iso2": "SS", "difficulty": "hard",   "continent": "Afrique"},
+    {"fr": "Bénin",              "en": "Benin",                    "capital_fr": "Porto-Novo",      "iso2": "BJ", "difficulty": "hard",   "continent": "Afrique"},
+    {"fr": "Togo",               "en": "Togo",                     "capital_fr": "Lomé",            "iso2": "TG", "difficulty": "hard",   "continent": "Afrique"},
+    # Amériques
     {"fr": "Équateur",           "en": "Ecuador",                  "capital_fr": "Quito",           "iso2": "EC", "difficulty": "hard",   "continent": "Amérique du Sud"},
     {"fr": "Bolivie",            "en": "Bolivia",                  "capital_fr": "Sucre",           "iso2": "BO", "difficulty": "hard",   "continent": "Amérique du Sud"},
     {"fr": "Paraguay",           "en": "Paraguay",                 "capital_fr": "Asunción",        "iso2": "PY", "difficulty": "hard",   "continent": "Amérique du Sud"},
     {"fr": "Uruguay",            "en": "Uruguay",                  "capital_fr": "Montevideo",      "iso2": "UY", "difficulty": "hard",   "continent": "Amérique du Sud"},
+    {"fr": "Guyana",             "en": "Guyana",                   "capital_fr": "Georgetown",      "iso2": "GY", "difficulty": "hard",   "continent": "Amérique du Sud"},
+    {"fr": "Suriname",           "en": "Suriname",                 "capital_fr": "Paramaribo",      "iso2": "SR", "difficulty": "hard",   "continent": "Amérique du Sud"},
     {"fr": "Guatemala",          "en": "Guatemala",                "capital_fr": "Guatemala City",  "iso2": "GT", "difficulty": "hard",   "continent": "Amérique du Nord"},
     {"fr": "Panama",             "en": "Panama",                   "capital_fr": "Panama City",     "iso2": "PA", "difficulty": "hard",   "continent": "Amérique du Nord"},
+    {"fr": "Haïti",              "en": "Haiti",                    "capital_fr": "Port-au-Prince",  "iso2": "HT", "difficulty": "hard",   "continent": "Amérique du Nord"},
+    {"fr": "République dominicaine","en": "Dominican Rep.",        "capital_fr": "Saint-Domingue",  "iso2": "DO", "difficulty": "hard",   "continent": "Amérique du Nord"},
+    {"fr": "Jamaïque",           "en": "Jamaica",                  "capital_fr": "Kingston",        "iso2": "JM", "difficulty": "hard",   "continent": "Amérique du Nord"},
+    {"fr": "Trinité-et-Tobago",  "en": "Trinidad and Tobago",      "capital_fr": "Port of Spain",   "iso2": "TT", "difficulty": "hard",   "continent": "Amérique du Nord"},
+    {"fr": "Belize",             "en": "Belize",                   "capital_fr": "Belmopan",        "iso2": "BZ", "difficulty": "hard",   "continent": "Amérique du Nord"},
+    {"fr": "El Salvador",        "en": "El Salvador",              "capital_fr": "San Salvador",    "iso2": "SV", "difficulty": "hard",   "continent": "Amérique du Nord"},
+    {"fr": "Honduras",           "en": "Honduras",                 "capital_fr": "Tegucigalpa",     "iso2": "HN", "difficulty": "hard",   "continent": "Amérique du Nord"},
+    {"fr": "Nicaragua",          "en": "Nicaragua",                "capital_fr": "Managua",         "iso2": "NI", "difficulty": "hard",   "continent": "Amérique du Nord"},
+    # Océanie
+    {"fr": "Papouasie-Nouvelle-Guinée","en": "Papua New Guinea",   "capital_fr": "Port Moresby",    "iso2": "PG", "difficulty": "hard",   "continent": "Océanie"},
+    {"fr": "Fidji",              "en": "Fiji",                     "capital_fr": "Suva",            "iso2": "FJ", "difficulty": "hard",   "continent": "Océanie"},
+    {"fr": "Îles Salomon",       "en": "Solomon Is.",              "capital_fr": "Honiara",         "iso2": "SB", "difficulty": "hard",   "continent": "Océanie"},
+    {"fr": "Vanuatu",            "en": "Vanuatu",                  "capital_fr": "Port-Vila",       "iso2": "VU", "difficulty": "hard",   "continent": "Océanie"},
 ]
