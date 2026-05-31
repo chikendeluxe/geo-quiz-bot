@@ -134,7 +134,7 @@ class QuizSession:
                 )
                 is_correct = _normalize(reply.content) == _normalize(question["answer"])
                 answered[reply.author.id] = (reply.author, is_correct)
-                await reply.add_reaction("✅" if is_correct else "❌")
+                asyncio.create_task(reply.add_reaction("✅" if is_correct else "❌"))
                 if is_correct:
                     break
 
