@@ -1,0 +1,5 @@
+﻿.env
+.venv/
+__pycache__/
+_map_cache/
+bot.zip
