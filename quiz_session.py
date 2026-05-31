@@ -133,7 +133,8 @@ class QuizSession:
                     self.bot.wait_for("message", check=check),
                     timeout=min(remaining, 1.0),
                 )
-                is_correct = _normalize(reply.content) == _normalize(question["answer"])
+                accepted   = [question["answer"]] + question.get("aliases", [])
+                is_correct = any(_normalize(reply.content) == _normalize(a) for a in accepted)
 
                 if is_correct:
                     correct_ids.add(reply.author.id)

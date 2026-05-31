@@ -1,10 +1,9 @@
 """
-Génération des questions pour les trois types de quiz.
-Pas de QCM — les joueurs tapent leur réponse.
+Génération des questions — les alias anglais sont inclus dans chaque question.
 """
 
 import random
-from countries_data import COUNTRIES, get_flag
+from countries_data import COUNTRIES, get_flag, COUNTRY_ALIASES, CAPITAL_ALIASES
 
 
 def get_pool(difficulty: str) -> list[dict]:
@@ -18,7 +17,6 @@ def pick_distractors(correct: dict, pool: list[dict], n: int = 3) -> list[dict]:
     others = [c for c in pool if c["fr"] != correct["fr"]]
     same   = [c for c in others if c["continent"] == correct["continent"]]
     diff   = [c for c in others if c["continent"] != correct["continent"]]
-
     chosen: list[dict] = []
     if len(same) >= 2:
         chosen = random.sample(same, min(2, n))
@@ -28,15 +26,32 @@ def pick_distractors(correct: dict, pool: list[dict], n: int = 3) -> list[dict]:
             chosen += random.sample(fill_pool, remaining_n)
     else:
         chosen = random.sample(others, min(n, len(others)))
-
     return chosen[:n]
+
+
+def _country_aliases(country: dict) -> list[str]:
+    """Retourne les alias anglais d'un pays (nom EN + variantes)."""
+    aliases = []
+    # Nom anglais geopandas
+    if country["en"] and country["en"] != country["fr"]:
+        aliases.append(country["en"])
+    # Variantes supplémentaires
+    aliases += COUNTRY_ALIASES.get(country["fr"], [])
+    return list(dict.fromkeys(aliases))  # dédoublonnage
+
+
+def _capital_aliases(capital_fr: str) -> list[str]:
+    """Retourne l'alias anglais d'une capitale si elle existe."""
+    en = CAPITAL_ALIASES.get(capital_fr)
+    return [en] if en and en != capital_fr else []
 
 
 def make_flag_question(country: dict, pool: list[dict]) -> dict:
     return {
         "type":       "flag",
         "answer":     country["fr"],
-        "iso2":       country["iso2"],   # pour l'image flagcdn.com
+        "aliases":    _country_aliases(country),
+        "iso2":       country["iso2"],
         "country_en": country["en"],
         "country_fr": country["fr"],
     }
@@ -50,6 +65,7 @@ def make_capital_question(country: dict, pool: list[dict]) -> dict:
             "type":       "capital",
             "text":       f"🏛️ Quelle est la capitale de **{country['fr']}** ?",
             "answer":     country["capital_fr"],
+            "aliases":    _capital_aliases(country["capital_fr"]),
             "country_en": country["en"],
             "country_fr": country["fr"],
         }
@@ -58,6 +74,7 @@ def make_capital_question(country: dict, pool: list[dict]) -> dict:
             "type":       "capital",
             "text":       f"🏛️ **{country['capital_fr']}** est la capitale de quel pays ?",
             "answer":     country["fr"],
+            "aliases":    _country_aliases(country),
             "country_en": country["en"],
             "country_fr": country["fr"],
         }
@@ -68,6 +85,7 @@ def make_map_question(country: dict, pool: list[dict]) -> dict:
         "type":       "map",
         "text":       "🗺️ Quel est le pays colorié en **rouge** sur cette carte ?",
         "answer":     country["fr"],
+        "aliases":    _country_aliases(country),
         "country_en": country["en"],
         "country_fr": country["fr"],
     }
@@ -93,12 +111,10 @@ def generate_questions(
     random.shuffle(type_cycle)
 
     questions: list[dict] = []
-
     for i in range(num_questions):
         if not available:
             available = pool.copy()
             random.shuffle(available)
-
         country = available.pop(0)
         q_type  = type_cycle[i % len(type_cycle)]
         questions.append(_MAKERS.get(q_type, make_flag_question)(country, pool))
