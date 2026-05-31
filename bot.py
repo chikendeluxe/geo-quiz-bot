@@ -125,7 +125,7 @@ async def quiz_command(
             f"**Difficulté :** {diff_lbl}\n"
             f"**Questions :** {questions}\n\n"
             "Le quiz démarre dans **3 secondes…**\n"
-            "Tout le monde peut répondre — chacun une fois par question !"
+            "Tout le monde peut répondre !"
         ),
         color=0x3498DB,
     )
