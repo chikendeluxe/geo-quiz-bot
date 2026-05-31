@@ -54,7 +54,7 @@ def _load_world():
 
     # 3. Téléchargement depuis Natural Earth CDN (une seule fois)
     print("📥 Téléchargement des données cartographiques (une seule fois)…")
-    url = "https://naciscdn.org/naturalearth/110m/cultural/ne_110m_admin_0_countries.zip"
+    url = "https://naciscdn.org/naturalearth/10m/cultural/ne_10m_admin_0_countries.zip"
     try:
         _world_data = gpd.read_file(url)
         os.makedirs(CACHE_DIR, exist_ok=True)
@@ -93,7 +93,7 @@ def _generate_map_sync(country_name_en: str) -> bytes:
     bounds = target.geometry.total_bounds
     w   = bounds[2] - bounds[0]
     h   = bounds[3] - bounds[1]
-    pad = max(w, h, 4.0) * 0.9
+    pad = max(w, h, 10.0) * 2.0
 
     xlim = (max(-180.0, bounds[0] - pad), min(180.0, bounds[2] + pad))
     ylim = (max(-90.0,  bounds[1] - pad), min(90.0,  bounds[3] + pad))
