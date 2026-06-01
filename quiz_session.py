@@ -47,6 +47,9 @@ class QuizSession:
         self.questions = generate_questions(
             self.question_types, self.difficulty, self.num_questions
         )
+        # Le pool de pays peut être plus petit que le nombre demandé :
+        # on aligne le total sur le nombre réel de questions générées.
+        self.num_questions = len(self.questions)
         try:
             for i, question in enumerate(self.questions):
                 if not self.is_active:

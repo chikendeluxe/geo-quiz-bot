@@ -113,8 +113,8 @@ def generate_questions(
     questions: list[dict] = []
     for i in range(num_questions):
         if not available:
-            available = pool.copy()
-            random.shuffle(available)
+            # Toutes les questions possibles ont déjà été posées → on s'arrête
+            break
         country = available.pop(0)
         q_type  = type_cycle[i % len(type_cycle)]
         questions.append(_MAKERS.get(q_type, make_flag_question)(country, pool))
